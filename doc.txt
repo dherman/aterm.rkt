@@ -1,0 +1,70 @@
+_ATerm_
+_aterm_
+
+This collection provides one file:
+
+ _aterm.ss_: reads input in ATerm plain text format.
+
+This library provides utilities for manipulating the ATerm format.
+
+See:
+
+  - XXX
+
+======================================================================
+
+DATA DEFINITIONS -----------------------------------------------------
+
+An aterm is one of:
+
+  - sexp
+  - annotated
+
+> (struct annotated (term annotation)) :: sexp * aterm
+
+Represents an ATerm annotated with the "{ ... }" syntax (see below).
+
+PROCEDURES -----------------------------------------------------------
+
+> (make-aterm-reader in) :: input-port -> (-> sexp)
+
+Produces a thunk that reads an ATerm as an S-expression from the given
+input port.
+
+The translation of ATerms is given recursively over the grammar
+given at:
+
+    http://nix.cs.uu.nl/dist/stratego/strategoxt-manual-unstable-latest/manual/chunk-chapter/ref-baffle.html
+
+The translation function [| -- |] is specified as follows:
+
+  t :
+    [| bt |]                 -> S-expression
+    [| bt { t } |]           -> (make-annotated [| bt |] [| t |])
+
+  bt :
+    [| C |]                  -> symbol
+    [| C(t1,...,tn) |]       -> (list [| C |] [| t1 |] ... [| tn |])
+    [| (t1,...,tn) |]        -> (list [| t1 |] ... [| tn |])
+    [| [t1,...,tn] |]        -> (list 'list [| t1 |] ... [| tn |])
+    [| "ccc" |]              -> string
+    [| int |]                -> integer
+    [| real |]               -> (not implemented)
+    [| blob |]               -> (not implemented)
+
+> (unescape str) :: string -> string
+
+Interprets the following escape sequences in a string:
+
+  \a : alarm (ASCII 7)
+  \b : backspace (ASCII 8)
+  \t : tab (ASCII 9)
+  \n : newline (ASCII 10)
+  \v : vertical tab (ASCII 11)
+  \f : formfeed (ASCII 12)
+  \r : return (ASCII 13)
+  \e : escape (ASCII 27)
+  \\ : backslash (ASCII 92)
+
+All other escaped letters are escaped to themselves, i.e., the initial 
+backslash is removed.
